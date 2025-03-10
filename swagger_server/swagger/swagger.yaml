@@ -1,0 +1,88 @@
+openapi: 3.0.3
+info:
+  title: CWE predictor - OpenAPI 3.0
+  description: This is a CWE Prediction Server based on the OpenAPI 3.0 specification.
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  version: 1.0.11
+servers:
+- url: /
+tags:
+- name: cwe
+  description: Predict CWE based on sample
+  externalDocs:
+    description: Find out more
+    url: http://swagger.io
+paths:
+  /cwe:
+    post:
+      tags:
+      - cwe
+      summary: Get CWE by sample
+      description: Get a CWE tree prediction for the given sample.
+      operationId: get_cwe_tree
+      requestBody:
+        description: Get CWE by sample
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Sample'
+        required: true
+      responses:
+        "200":
+          description: CWE key is the CWE predicted with the most confidence and Confidence
+            key is the confidence of that prediction. Predictions key has all the
+            predictions for each tier regardless of parent/child context. Tree key
+            has the most confident prediction last and the ones before that are from
+            searching the parent for the CWEs.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Result'
+        "405":
+          description: Invalid input
+      x-openapi-router-controller: swagger_server.controllers.cwe_controller
+components:
+  schemas:
+    Sample:
+      required:
+      - bug_text
+      type: object
+      properties:
+        bug_text:
+          type: string
+          example: This vulnerability affects the function getUploadedFileList of
+            the file Classes/Service/UploadFileService.php. The manipulation leads
+            to pathname traversal.
+    Result:
+      type: object
+      properties:
+        cwe:
+          type: string
+        confidence:
+          type: number
+          example: 9.9
+        predictions:
+          type: string
+          example: "('CWE-123', 0.1), ('CWE-345', 0.2)"
+        tree:
+          type: array
+          items:
+            type: string
+            example: "CWE-123, CWE-334"
+      example:
+        cwe: cwe
+        confidence: 9.9
+        tree:
+        - "CWE-123, CWE-334"
+        - "CWE-123, CWE-334"
+        predictions: "('CWE-123', 0.1), ('CWE-345', 0.2)"
+  requestBodies:
+    Sample:
+      description: Text sample to be predicted.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Sample'
+
